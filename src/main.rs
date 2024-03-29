@@ -1,25 +1,36 @@
-
-use ndarray::prelude::*;
 use polars::prelude::*;
+use chrono::prelude::*;
+use std::fs::File;
+use std::path::PathBuf;
 
 fn main() {
-    let arr1 = array![1., 2., 3., 4., 5., 6.];
-    let arr2 = array![1., 2.2, 3.3, 4., 5., 6.];
-    let arr3 = arr1 + arr2;
-    println!("1D array: \t{}", arr3);
 
-    let arr4 = array![[1., 2., 3.], [ 4., 5., 6.]];
-    let arr5 = array![[1.], [2.]];//Array::from_elem((2, 1), 1.);
-    let arr6 = arr4 + arr5;
-    println!("2D array:\n{}", arr6);
+    let mut df: DataFrame = df!(
+        "integer" => &[1, 2, 3],
+        "date" => &[
+                NaiveDate::from_ymd_opt(2025, 1, 1).unwrap().and_hms_opt(0, 0, 0).unwrap(),
+                NaiveDate::from_ymd_opt(2025, 1, 2).unwrap().and_hms_opt(0, 0, 0).unwrap(),
+                NaiveDate::from_ymd_opt(2025, 1, 3).unwrap().and_hms_opt(0, 0, 0).unwrap(),
+        ],
+        "float" => &[4.0, 5.0, 6.0],
+        "string" => &["a", "b", "c"],
+    )
+    .unwrap();
+    println!("{}", df);
+
+    let path: PathBuf = ["data", "output.csv"].iter().collect();
+
+    let mut file = File::create(&path).expect("could not create file");
+
+    CsvWriter::new(&mut file)
+        .include_header(true)
+        .with_separator(b',')
+        .finish(&mut df).unwrap();
     
+    let df_csv = CsvReader::from_path(&path).unwrap()
+        .infer_schema(None)
+        .has_header(true)
+        .finish().unwrap();
+    println!("{}", df_csv);
 
-    let df = df![
-        "Model" => ["iPhone XS", "iPhone 12", "iPhone 13", "iPhone 14", "Samsung S11", "Samsung S12", "Mi A1", "Mi A2"],
-        "Company" => ["Apple", "Apple", "Apple", "Apple", "Samsung", "Samsung", "Xiao Mi", "Xiao Mi"],
-        "Sales" => [80, 170, 130, 205, 400, 30, 14, 8],
-        "Comment" => [None, None, Some("Sold Out"), Some("New Arrival"), None, Some("Sold Out"), None, None],
-    ];
-
-    println!("{}", &df.unwrap()); 
 }

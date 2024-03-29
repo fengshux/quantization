@@ -4,5 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+chrono = "0.4.35"
 ndarray = "0.15.6"
-polars = "0.38.3"
+polars = { version = "0.38.3", features = ["lazy", "temporal", "describe", "json", "parquet", "dtype-datetime"] }
